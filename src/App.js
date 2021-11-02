@@ -1,25 +1,50 @@
-import logo from './logo.svg';
-import './App.css';
+import { onSnapshot, collection, query, orderBy } from "firebase/firestore";
+import { useEffect, useState } from "react";
+import db from "./firebase";
+import Dot from "./Dot";
+import {
+  handleNew,
+  handleEdit,
+  handleDelete,
+  handleQueryDelete,
+} from "./utils";
 
-function App() {
+export default function App() {
+  const [colors, setColors] = useState([{ name: "Loading...", id: "initial" }]);
+
+  useEffect(() => {
+    const collectionRef = collection(db, "colors");
+    const q = query(collectionRef, orderBy("timestamp", "desc"));
+
+    const unsub = onSnapshot(q, (snapshot) =>
+      setColors(snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id })))
+    );
+
+    return unsub;
+  }, []);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="root">
+      <button className="button" onClick={handleNew}>
+        New
+      </button>
+      <button className="button" onClick={handleQueryDelete}>
+        Query Delete
+      </button>
+
+      <ul>
+        {colors.map((color) => (
+          <li key={color.id}>
+            <button className="button2" onClick={() => handleEdit(color.id)}>
+              edit
+            </button>
+            <button className="button2" onClick={() => handleDelete(color.id)}>
+              delete
+            </button>
+            <Dot color={color.value} /> {color.name}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
-
-export default App;
